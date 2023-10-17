@@ -1,0 +1,5 @@
+SECRET_KEY = "f169c4c4913a23e2b2fcd203024ae81fe19acca37b62a269c79c77e631b2bd9d"
+
+BD_CONNECTION = "mongodb://admin:TEST!SRV1_!%23%23%23@nik.ydns.eu:404/"
+
+ALGORITHM = "HS256"
