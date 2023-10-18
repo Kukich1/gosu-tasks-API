@@ -233,13 +233,10 @@ async def complete_project(project_id: str, current_user: str = Depends(get_curr
             updated_task = await project_collection.find_one({'id': project_id},{'_id': 0})
             timestamp = datetime.now().timestamp()
             timestamp_without_ms = round(timestamp)
-            updated_task['time_complited'] = timestamp_without_ms
-            result = await project_collection.update_one({'id': project_id}, {'$set': updated_task})
+            updated_task['time_completed'] = timestamp_without_ms
             return updated_task
         else:
             raise HTTPException(status_code=404, detail="Item not found")
-        
-        
 
 @router.delete("/delet_project/{project_id}")
 async def delete_project(project_id: str, current_user: str = Depends(get_current_user)):

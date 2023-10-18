@@ -43,7 +43,7 @@ async def show_completed_projects(start: int = Query(default=0, ge=0), end: int 
     try:
         db = get_db()
         project_collection = db['projects']
-        completed_project_lst = await project_collection.find({"created_at":{"$gte": start, "$lte": end}, 'status': 'completed'}, {'_id': 0, 'id': 1, 'name': 1, 'description': 1, 'members': 1, 'deadline': 1, 'created_at': 1, 'commets': 1, 'type': 1, 'status': 1}).to_list(length=None)
+        completed_project_lst = await project_collection.find({"created_at":{"$gte": start, "$lte": end}, 'status': 'completed'}, {'_id': 0, 'id': 1, 'name': 1, 'description': 1, 'members': 1, 'deadline': 1, 'created_at': 1, 'commets': 1, 'type': 1, 'status': 1, 'time_completed': 1}).to_list(length=None)
         return completed_project_lst
     except Exception as error: 
         return "something wrong"
