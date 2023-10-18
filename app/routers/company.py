@@ -16,6 +16,18 @@ async def show_projects():
         db = get_db()
         project_collection = db['projects']
         projects = await project_collection.find({'status': 'current'}, {'_id': 0}).to_list(length=None)
+        for project in projects:
+            project_name = project['name']
+            project_name = urllib.parse.unquote(project_name)
+            task_collection = db['tasks']
+            tasks = await task_collection.find({'project': project_name},{'_id': 0,'id': 1}).to_list(length=None)
+            task_count = len(tasks)
+            task_completed = await task_collection.find({'project': project_name, 'status': 'complete'},{'_id': 0,'id': 1}).to_list(length=None)
+            task_completed_count = len(task_completed)
+            print(type(project))
+            project["task_count"] = task_count
+            print(type(project))
+            project["task_completed_count"] = task_completed_count
         return projects
     except Exception as error:
         return "ups"
