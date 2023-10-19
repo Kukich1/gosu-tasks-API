@@ -237,7 +237,8 @@ async def complete_project(project_id: str, current_user: str = Depends(get_curr
     print(checked_tasks)
     
     da_ili_net = True
-
+    if len(checked_tasks) == 0:
+        da_ili_net = False
     for name in checked_tasks:
         if name['status'] == 'current':
             da_ili_net = False
