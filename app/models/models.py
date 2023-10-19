@@ -25,7 +25,7 @@ class Project(BaseModel):
     members: list[str]
     deadline: int
     created_at: int = None
-    time_complited: int = None
+    time_completed: int = None
     status: str = None
 
 class Task(BaseModel):
@@ -37,7 +37,7 @@ class Task(BaseModel):
     deadline: int
     created_at: int = None
     comments: list[str] = []
-    time_complited: int = None
+    time_completed: int = None
     type: str = None
     status: str = None
 
@@ -48,7 +48,7 @@ class Post(BaseModel):
     member: str 
     task: str
     created_at: int = None
-    time_complited: int = None
+    time_completed: int = None
     type: str  = None
     status: str = None
 

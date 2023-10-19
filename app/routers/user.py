@@ -85,7 +85,7 @@ async def complete_post(post_id: str, current_user: str = Depends(get_current_us
         updated_post = await post_collection.find_one({"id": post_id},{'_id': 0})
         timestamp = datetime.now().timestamp()
         timestamp_without_ms = round(timestamp)
-        updated_post['time_complited'] = timestamp_without_ms
+        updated_post['time_completed'] = timestamp_without_ms
         return updated_post
     else:
         raise HTTPException(status_code=404, detail="Item not found")
@@ -99,7 +99,7 @@ async def complete_task(task_id: str, current_user: str = Depends(get_current_us
         updated_task = await task_collection.find_one({'id': task_id},{'_id': 0})
         timestamp = datetime.now().timestamp()
         timestamp_without_ms = round(timestamp)
-        updated_task['time_complited'] = timestamp_without_ms
+        updated_task['time_completed'] = timestamp_without_ms
         return updated_task
     else:
         raise HTTPException(status_code=404, detail="Item not found")

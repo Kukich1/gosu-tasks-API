@@ -53,7 +53,7 @@ async def show_tasks(project_name: str):
 @router.get("/completed_projects/")
 async def show_completed_projects(start: int = Query(default=0, ge=0), end: int = Query(default=2000000000, le=2000000000), current_user: str = Depends(get_current_user)):
     try:
-        db = get_db()
+        db = get_db()   
         project_collection = db['projects']
         completed_project_lst = await project_collection.find({"time_completed":{"$gte": start, "$lte": end}, 'status': 'completed'}, {'_id': 0, 'id': 1, 'name': 1, 'description': 1, 'members': 1, 'deadline': 1, 'created_at': 1, 'commets': 1, 'type': 1, 'status': 1, 'time_completed': 1}).to_list(length=None)
         return completed_project_lst

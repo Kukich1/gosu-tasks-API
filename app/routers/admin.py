@@ -236,22 +236,23 @@ async def complete_project(project_id: str, current_user: str = Depends(get_curr
     checked_tasks = await check_complete_task(project['name'])
     print(checked_tasks)
     
-    is_current = False
+    da_ili_net = True
 
     for name in checked_tasks:
         if name['status'] == 'current':
-            is_current = True
+            da_ili_net = False
             break
 
-    if is_current:
-        raise HTTPException(status_code=404, detail="You have 'status': 'current'")
-    result = await project_collection.update_one({'id': project_id}, {'$set': {'status': 'complete'}})
-    if result.matched_count == 1:
-        timestamp = datetime.now().timestamp()
-        timestamp_without_ms = round(timestamp)
-        await project_collection.update_one({'id': project_id},{'$set':{'time_complited': timestamp_without_ms}})
+    if da_ili_net:
+        result = await project_collection.update_one({'id': project_id}, {'$set': {'status': 'complete'}})
+        if result.matched_count == 1:
+            timestamp = datetime.now().timestamp()
+            timestamp_without_ms = round(timestamp)
+            await project_collection.update_one({'id': project_id},{'$set':{'time_completed': timestamp_without_ms}})
+        else:
+            raise HTTPException(status_code=404, detail="Item not found")
     else:
-        raise HTTPException(status_code=404, detail="Item not found")
+        raise HTTPException(status_code=404, detail="You have 'status': 'current'")
 
 @router.delete("/delet_project/{project_id}")
 async def delete_project(project_id: str, current_user: str = Depends(get_current_user)):
