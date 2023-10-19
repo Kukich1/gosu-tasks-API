@@ -27,8 +27,8 @@ async def show_completed_taskpost(start: int = Query(default=0, ge=0), end: int 
     db = get_db()
     posts_collection = db['posts']
     task_collection = db['tasks']
-    user_posts = await posts_collection.find({"created_at":{"$gte": start, "$lte": end}, "member": current_user, 'status': 'complete'}, {'_id': 0, 'id': 1, 'name': 1, 'description': 1, 'task': 1, 'created_at': 1, 'type': 1, 'status': 1}).to_list(length=None)
-    user_tasks = await task_collection.find({"created_at":{"$gte": start, "$lte": end}, "members": current_user, 'status': 'complete'}, {'_id': 0, 'id': 1, 'name': 1, 'description': 1, 'project': 1, 'deadline': 1, 'created_at': 1, 'comments': 1, 'type': 1, 'status': 1, 'members': 1}).to_list(length=None)
+    user_posts = await posts_collection.find({"created_at":{"$gte": start, "$lte": end}, "member": current_user, 'status': 'completed'}, {'_id': 0, 'id': 1, 'name': 1, 'description': 1, 'task': 1, 'created_at': 1, 'type': 1, 'status': 1}).to_list(length=None)
+    user_tasks = await task_collection.find({"created_at":{"$gte": start, "$lte": end}, "members": current_user, 'status': 'completed'}, {'_id': 0, 'id': 1, 'name': 1, 'description': 1, 'project': 1, 'deadline': 1, 'created_at': 1, 'comments': 1, 'type': 1, 'status': 1, 'members': 1}).to_list(length=None)
     completed_lst = user_posts + user_tasks
     return completed_lst
 
@@ -80,7 +80,7 @@ async def change_post(post_id: str, post: Post, current_user: str = Depends(get_
 async def complete_post(post_id: str, current_user: str = Depends(get_current_user)):
     db = get_db()
     post_collection = db['posts']
-    result = await post_collection.update_one({'id': post_id}, {'$set': {'status': 'complete'}})
+    result = await post_collection.update_one({'id': post_id}, {'$set': {'status': 'completed'}})
     if result.matched_count == 1:
         updated_post = await post_collection.find_one({"id": post_id},{'_id': 0})
         timestamp = datetime.now().timestamp()
@@ -94,7 +94,7 @@ async def complete_post(post_id: str, current_user: str = Depends(get_current_us
 async def complete_task(task_id: str, current_user: str = Depends(get_current_user)):
     db = get_db()
     task_collection = db['tasks']
-    result = await task_collection.update_one({'id': task_id}, {'$set': {'status': 'complete'}})
+    result = await task_collection.update_one({'id': task_id}, {'$set': {'status': 'completed'}})
     if result.matched_count == 1:
         updated_task = await task_collection.find_one({'id': task_id},{'_id': 0})
         timestamp = datetime.now().timestamp()

@@ -244,7 +244,7 @@ async def complete_project(project_id: str, current_user: str = Depends(get_curr
             break
 
     if da_ili_net:
-        result = await project_collection.update_one({'id': project_id}, {'$set': {'status': 'complete'}})
+        result = await project_collection.update_one({'id': project_id}, {'$set': {'status': 'completed'}})
         if result.matched_count == 1:
             timestamp = datetime.now().timestamp()
             timestamp_without_ms = round(timestamp)
