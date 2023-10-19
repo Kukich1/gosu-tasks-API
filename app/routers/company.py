@@ -16,6 +16,18 @@ async def show_projects():
         db = get_db()
         project_collection = db['projects']
         projects = await project_collection.find({'status': 'current'}, {'_id': 0}).to_list(length=None)
+        for project in projects:
+            project_name = project['name']
+            project_name = urllib.parse.unquote(project_name)
+            task_collection = db['tasks']
+            tasks = await task_collection.find({'project': project_name},{'_id': 0,'id': 1}).to_list(length=None)
+            task_count = len(tasks)
+            task_completed = await task_collection.find({'project': project_name, 'status': 'complete'},{'_id': 0,'id': 1}).to_list(length=None)
+            task_completed_count = len(task_completed)
+            print(type(project))
+            project["task_count"] = task_count
+            print(type(project))
+            project["task_completed_count"] = task_completed_count
         return projects
     except Exception as error:
         return "ups"
@@ -43,7 +55,7 @@ async def show_completed_projects(start: int = Query(default=0, ge=0), end: int 
     try:
         db = get_db()
         project_collection = db['projects']
-        completed_project_lst = await project_collection.find({"created_at":{"$gte": start, "$lte": end}, 'status': 'completed'}, {'_id': 0, 'id': 1, 'name': 1, 'description': 1, 'members': 1, 'deadline': 1, 'created_at': 1, 'commets': 1, 'type': 1, 'status': 1, 'time_completed': 1}).to_list(length=None)
+        completed_project_lst = await project_collection.find({"time_completed":{"$gte": start, "$lte": end}, 'status': 'completed'}, {'_id': 0, 'id': 1, 'name': 1, 'description': 1, 'members': 1, 'deadline': 1, 'created_at': 1, 'commets': 1, 'type': 1, 'status': 1, 'time_completed': 1}).to_list(length=None)
         return completed_project_lst
     except Exception as error: 
         return "something wrong"
