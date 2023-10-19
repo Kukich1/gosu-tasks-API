@@ -174,25 +174,37 @@ async def export_user_posts(username: str, start: float = Query(default=0, ge=0)
         return "something wrong"
 
 @router.put("/change_project/{project_id}")
-async def change_project(project_id: str,project: Project, current_user: str = Depends(get_current_user)):
+async def change_project(project_id: str, project: Project, current_user: str = Depends(get_current_user)):
     db = get_db()
     project_collection = db['projects']
-    old_project_name = await project_collection.find_one({'id': project_id}, {'name': 1})
-    old_project_name = old_project_name.get('name', '')
-    new_project_name = project.name
-    task_collection = db['tasks']
-    await task_collection.update_many({'project': old_project_name}, {'$set': {'project': new_project_name}})
-    update_fields = {
-        '$set': {
-            'name': project.name,
-            'description': project.description,
-            'members': project.members,
-            'deadline': project.deadline
-        }
-    }
-    updated_project =await project_collection.update_one({'id': project_id}, update_fields)
-    if updated_project:
+    old_project = await project_collection.find_one({'id': project_id})
+    if old_project:
+        old_project_name = old_project['name']
+        new_project_name = project.name
+
+        # Сохраняем старый дедлайн в архиве
+        if 'archive_deadline' not in old_project:
+            old_project['archive_deadline'] = []
+        old_project['archive_deadline'].append(old_project['deadline'])
+
+        # Обновляем поле 'deadline' в проекте
+        old_project['deadline'] = project.deadline
+
+        # Обновляем остальные поля
+        old_project['name'] = project.name
+        old_project['description'] = project.description
+        old_project['members'] = project.members
+
+        # Обновляем документ в коллекции проектов
+        await project_collection.replace_one({'id': project_id}, old_project)
+
+        # Обновляем задачи, связанные с этим проектом
+        task_collection = db['tasks']
+        await task_collection.update_many({'project': old_project_name}, {'$set': {'project': new_project_name}})
+
         return {'message': 'Project updated'}
+    else:
+        return {'message': 'Project not found'}
     
 @router.put("/change_task/{task_id}")
 async def change_task(task_id: str, task: Task, current_user: str = Depends(get_current_user)):
