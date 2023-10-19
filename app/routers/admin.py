@@ -181,27 +181,17 @@ async def change_project(project_id: str, project: Project, current_user: str = 
     if old_project:
         old_project_name = old_project['name']
         new_project_name = project.name
-
-        # Сохраняем старый дедлайн в архиве
-        if 'archive_deadline' not in old_project:
-            old_project['archive_deadline'] = []
-        old_project['archive_deadline'].append(old_project['deadline'])
-
-        # Обновляем поле 'deadline' в проекте
-        old_project['deadline'] = project.deadline
-
-        # Обновляем остальные поля
+        if old_project['deadline'] != project.deadline:
+            if 'archive_deadline' not in old_project:
+                old_project['archive_deadline'] = []
+            old_project['archive_deadline'].append(old_project['deadline'])
+            old_project['deadline'] = project.deadline
         old_project['name'] = project.name
         old_project['description'] = project.description
         old_project['members'] = project.members
-
-        # Обновляем документ в коллекции проектов
         await project_collection.replace_one({'id': project_id}, old_project)
-
-        # Обновляем задачи, связанные с этим проектом
         task_collection = db['tasks']
         await task_collection.update_many({'project': old_project_name}, {'$set': {'project': new_project_name}})
-
         return {'message': 'Project updated'}
     else:
         return {'message': 'Project not found'}
