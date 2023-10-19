@@ -177,13 +177,20 @@ async def export_user_posts(username: str, start: float = Query(default=0, ge=0)
 async def change_project(project_id: str,project: Project, current_user: str = Depends(get_current_user)):
     db = get_db()
     project_collection = db['projects']
-    updated_dict = project.dict()
-    updated_dict['id'] = str(uuid4())
-    updated_dict['status'] = 'current'
-    timestamp = datetime.now().timestamp()
-    timestamp_without_ms = round(timestamp)
-    updated_dict['created_at'] = timestamp_without_ms
-    updated_project = await project_collection.update_one({'id': project_id}, {'$set': updated_dict})
+    old_project_name = await project_collection.find_one({'id': project_id}, {'name': 1})
+    old_project_name = old_project_name.get('name', '')
+    new_project_name = project.name
+    task_collection = db['tasks']
+    await task_collection.update_many({'project': old_project_name}, {'$set': {'project': new_project_name}})
+    update_fields = {
+        '$set': {
+            'name': project.name,
+            'description': project.description,
+            'members': project.members,
+            'deadline': project.deadline
+        }
+    }
+    updated_project = await project_collection.update_one({'id': project_id}, update_fields)
     if updated_project:
         return {'message': 'Project updated'}
     
@@ -191,6 +198,11 @@ async def change_project(project_id: str,project: Project, current_user: str = D
 async def change_task(task_id: str, task: Task, current_user: str = Depends(get_current_user)):
     db = get_db()
     task_collection = db['tasks']
+    old_task_name = await task_collection.find_one({'id': task_id}, {'name': 1})
+    old_task_name = old_task_name.get('name', '')
+    new_task_name = task.name
+    task_collection = db['tasks']
+    await task_collection.update_many({'task': old_task_name}, {'$set': {'task': new_task_name}})
     updated_dict = task.dict()
     updated_dict['id'] = str(uuid4())
     updated_dict['type'] = "task"
