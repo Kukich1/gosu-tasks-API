@@ -177,6 +177,11 @@ async def export_user_posts(username: str, start: float = Query(default=0, ge=0)
 async def change_project(project_id: str,project: Project, current_user: str = Depends(get_current_user)):
     db = get_db()
     project_collection = db['projects']
+    old_project_name = await project_collection.find_one({'id': project_id}, {'name': 1})
+    old_project_name = old_project_name.get('name', '')
+    new_project_name = project.name
+    task_collection = db['tasks']
+    await task_collection.update_many({'project': old_project_name}, {'$set': {'project': new_project_name}})
     updated_dict = project.dict()
     updated_dict['id'] = str(uuid4())
     updated_dict['status'] = 'current'
