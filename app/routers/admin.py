@@ -200,21 +200,24 @@ async def change_project(project_id: str, project: Project, current_user: str = 
 async def change_task(task_id: str, task: Task, current_user: str = Depends(get_current_user)):
     db = get_db()
     task_collection = db['tasks']
-    old_task_name = await task_collection.find_one({'id': task_id}, {'name': 1})
-    old_task_name = old_task_name.get('name', '')
-    new_task_name = task.name
-    task_collection = db['tasks']
-    await task_collection.update_many({'task': old_task_name}, {'$set': {'task': new_task_name}})
-    updated_dict = task.dict()
-    updated_dict['id'] = str(uuid4())
-    updated_dict['type'] = "task"
-    updated_dict['status'] = 'current'
-    timestamp = datetime.now().timestamp()
-    timestamp_without_ms = round(timestamp)
-    updated_dict['created_at'] = timestamp_without_ms
-    result = await task_collection.update_one({'id': task_id}, {'$set': updated_dict})
-    if result:
-        return {'message': 'Task updated'}
+    old_task = await task_collection.find_one({'id': task_id})
+    if old_task:
+        old_task_name = old_task['name']
+        new_task_name = task.name
+        if old_task['deadline'] != task.deadline:
+            if 'archive_deadline' not in old_task:
+                old_task['archive_deadline'] = []
+            old_task['archive_deadline'].append(old_task['deadline'])
+            old_task['deadline'] = task.deadline
+        old_task['name'] = task.name
+        old_task['description'] = task.description
+        old_task['members'] = task.members
+        await task_collection.replace_one({'id': task_id}, old_task)
+        post_collection =db['posts']
+        await post_collection.update_many({'project': old_task_name}, {'$set': {'project': new_task_name}})
+        return {'message': 'Project updated'}
+    else:
+        return {'message': 'Project not found'}
 
 @router.patch("/add_comment_totask/{task_id}")
 async def add_comment(task_id: str, comment: Comment, current_user: str = Depends(get_current_user)):
@@ -233,24 +236,23 @@ async def complete_project(project_id: str, current_user: str = Depends(get_curr
     checked_tasks = await check_complete_task(project['name'])
     print(checked_tasks)
     
-    da_ili_net = False
+    da_ili_net = True
 
     for name in checked_tasks:
         if name['status'] == 'current':
-            return {'message': 'Posts for this project were not completed'}
-        else:
-            da_ili_net = True
+            da_ili_net = False
+            break
 
     if da_ili_net:
         result = await project_collection.update_one({'id': project_id}, {'$set': {'status': 'complete'}})
         if result.matched_count == 1:
-            updated_task = await project_collection.find_one({'id': project_id},{'_id': 0})
             timestamp = datetime.now().timestamp()
             timestamp_without_ms = round(timestamp)
-            updated_task['time_completed'] = timestamp_without_ms
-            return updated_task
+            await project_collection.update_one({'id': project_id},{'$set':{'time_complited': timestamp_without_ms}})
         else:
             raise HTTPException(status_code=404, detail="Item not found")
+    else:
+        raise HTTPException(status_code=404, detail="You have 'status': 'current'")
 
 @router.delete("/delet_project/{project_id}")
 async def delete_project(project_id: str, current_user: str = Depends(get_current_user)):
