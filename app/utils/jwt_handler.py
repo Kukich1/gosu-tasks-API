@@ -34,8 +34,7 @@ async def get_current_user(token: str = Depends(http_bearer)):
         db = get_db()
         user = await db['users'].find_one({"name": name, "role": 0})
         if user is None:
-            raise HTTPException(status_code=401, detail="User not found")
-        
+            user = await db['users'].find_one({"name": name, "role": 1})
         username = user.get("username")
         print(username)
         return username

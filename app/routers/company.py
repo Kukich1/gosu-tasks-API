@@ -44,12 +44,30 @@ async def show_tasks(project_name: str):
     if da_ili_net:
         db = get_db()
         task_collection = db['tasks']
-        tasks = await task_collection.find({'project': project_name},{'_id': 0, 'id': 1, 'name': 1, 'description': 1, 'members': 1, 'project': 1, 'deadline': 1, 'created_at': 1, 'commets': 1, 'type': 1, 'status': 1}).to_list(length=None)
+        tasks = await task_collection.find({'project': project_name},{'_id': 0, 'id': 1, 'name': 1, 'description': 1, 'members': 1, 'project': 1, 'deadline': 1, 'created_at': 1, 'commets': 1, 'type': 1, 'status': 1,'time_completed': 1}).to_list(length=None)
         return tasks
     else: 
         raise HTTPException(status_code=404, detail="Project not found")
 
+@router.get("/task_posts/{task_name}")
+async def show_posts(task_name: str):
+    task_name = urllib.parse.unquote(task_name)
+    compared_lst = await compare(task_name, "tasks")
+    da_ili_net = False
+    for name in compared_lst:
+        if name['name'] == task_name:
+            da_ili_net = True
+            break
+    if da_ili_net:
+        db = get_db()
+        post_collection = db['posts']
+        posts = await post_collection.find({'task': task_name},{'_id': 0, 'id': 1, 'name': 1, 'description': 1, 'member': 1, 'task': 1, 'created_at': 1,'time_completed': 1, 'type': 1, 'status': 1}).to_list(length=None)
+        return posts
+    else:
+        raise HTTPException(status_code=404, detail="Task not found")
     
+
+
 @router.get("/completed_projects/")
 async def show_completed_projects(start: int = Query(default=0, ge=0), end: int = Query(default=2000000000, le=2000000000), current_user: str = Depends(get_current_user)):
     try:
@@ -59,3 +77,4 @@ async def show_completed_projects(start: int = Query(default=0, ge=0), end: int 
         return completed_project_lst
     except Exception as error: 
         return "something wrong"
+    
