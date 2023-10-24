@@ -17,12 +17,12 @@ async def show_projects():
         project_collection = db['projects']
         projects = await project_collection.find({'status': 'current'}, {'_id': 0}).to_list(length=None)
         for project in projects:
-            project_name = project['name']
-            project_name = urllib.parse.unquote(project_name)
+            project_id = project['id']
+            project_id = urllib.parse.unquote(project_id)
             task_collection = db['tasks']
-            tasks = await task_collection.find({'project': project_name},{'_id': 0,'id': 1}).to_list(length=None)
+            tasks = await task_collection.find({'project': project_id},{'_id': 0,'id': 1}).to_list(length=None)
             task_count = len(tasks)
-            task_completed = await task_collection.find({'project': project_name, 'status': 'completed'},{'_id': 0,'id': 1}).to_list(length=None)
+            task_completed = await task_collection.find({'project': project_id, 'status': 'completed'},{'_id': 0,'id': 1}).to_list(length=None)
             task_completed_count = len(task_completed)
             print(type(project))
             project["task_count"] = task_count
