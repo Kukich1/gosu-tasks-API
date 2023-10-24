@@ -8,3 +8,4 @@ uvicorn==0.23.2
 Werkzeug==2.3.7
 python-jose==3.3.0
 openpyxl==3.1.2
+httpx==0.25.0
