@@ -32,36 +32,36 @@ async def show_projects():
     except Exception as error:
         return "ups"
     
-@router.get("/projects_tasks/{project_name}")
-async def show_tasks(project_name: str):
-    project_name = urllib.parse.unquote(project_name)
-    compared_lst = await compare(project_name, "projects")
+@router.get("/projects_tasks/{project_id}")
+async def show_tasks(project_id: str):
+    project_id = urllib.parse.unquote(project_id)
+    compared_lst = await compare(project_id, "projects")
     da_ili_net = False
-    for name in compared_lst:
-        if name['name'] == project_name:
+    for id in compared_lst:
+        if id['id'] == project_id:
             da_ili_net = True
             break
     if da_ili_net:
         db = get_db()
         task_collection = db['tasks']
-        tasks = await task_collection.find({'project': project_name},{'_id': 0, 'id': 1, 'name': 1, 'description': 1, 'members': 1, 'project': 1, 'deadline': 1, 'created_at': 1, 'commets': 1, 'type': 1, 'status': 1,'time_completed': 1}).to_list(length=None)
+        tasks = await task_collection.find({'project': project_id},{'_id': 0, 'id': 1, 'name': 1, 'description': 1, 'members': 1, 'project': 1, 'deadline': 1, 'created_at': 1, 'commets': 1, 'type': 1, 'status': 1,'time_completed': 1,'archive_deadline': 1}).to_list(length=None)
         return tasks
     else: 
         raise HTTPException(status_code=404, detail="Project not found")
 
-@router.get("/task_posts/{task_name}")
-async def show_posts(task_name: str):
-    task_name = urllib.parse.unquote(task_name)
-    compared_lst = await compare(task_name, "tasks")
+@router.get("/task_posts/{task_id}")
+async def show_posts(task_id: str):
+    task_id = urllib.parse.unquote(task_id)
+    compared_lst = await compare(task_id, "tasks")
     da_ili_net = False
-    for name in compared_lst:
-        if name['name'] == task_name:
+    for id in compared_lst:
+        if id['id'] == task_id:
             da_ili_net = True
             break
     if da_ili_net:
         db = get_db()
         post_collection = db['posts']
-        posts = await post_collection.find({'task': task_name},{'_id': 0, 'id': 1, 'name': 1, 'description': 1, 'member': 1, 'task': 1, 'created_at': 1,'time_completed': 1, 'type': 1, 'status': 1}).to_list(length=None)
+        posts = await post_collection.find({'task': task_id},{'_id': 0, 'id': 1, 'name': 1, 'description': 1, 'member': 1, 'task': 1, 'created_at': 1,'time_completed': 1, 'type': 1, 'status': 1}).to_list(length=None)
         return posts
     else:
         raise HTTPException(status_code=404, detail="Task not found")

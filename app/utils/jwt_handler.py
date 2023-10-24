@@ -30,7 +30,6 @@ async def get_current_user(token: str = Depends(http_bearer)):
         if name is None:
             raise HTTPException(status_code=401, detail="Could not validate credentials")
         
-        # Ваш код для получения username из базы данных на основе имени
         db = get_db()
         user = await db['users'].find_one({"name": name, "role": 0})
         if user is None:

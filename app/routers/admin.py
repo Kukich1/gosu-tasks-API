@@ -12,6 +12,7 @@ from app.utils.database import get_db, check_complete_task
 from app.utils.jwt_handler import get_current_user
 from app.models.models import Comment, Project, Task
 from app.utils.database import compare
+import httpx
 
 router = APIRouter(
     prefix="/admin",
@@ -24,7 +25,7 @@ async def get_admin_panel(current_user: str = Depends(get_current_user)):
     users_collection = db['users']
     user_list = await users_collection.find({'role': 0}, {'_id': 0, 'username': 1}).to_list(length=None)
     return user_list
-    
+
 @router.get("/show_users_task&posts_collection/{username}")
 async def show_collection(username: str, start: float = Query(default=0, ge=0), end: float = Query(default=10, le=2000000000), current_user: str = Depends(get_current_user)):
     db = get_db()
@@ -42,9 +43,28 @@ async def create_project(project: Project, current_user: str = Depends(get_curre
     timestamp = datetime.now().timestamp()
     timestamp_without_ms = round(timestamp)
     project_dict['created_at'] = timestamp_without_ms
+    project_name = project.name
     new_project = await project_collection.insert_one(project_dict)
+    data_to_sed = {
+        "project_name": project_name
+    }
+
     if new_project:
         return {"message": "New project is created"} 
+    async with httpx.AsyncClient() as client:
+        response = await client.post("https://test.4dev.kz/gsd_dev/hs/ServiceDesk1C/Tasks", json=data_to_sed)
+        if response.status_code == 200:
+            response_data = response.json()
+            print(response_data)
+
+            await project_collection.update_one(
+                {"id": project_dict['id']},
+                {"$set": {"1C_id": response_data}}
+            )
+
+            return {"message": "New project is created and response data is stored."}
+        else:
+            return {"error": "Failed to send data to the other endpoint."}
     
 @router.post("/create_task")
 async def create_task(task: Task, current_user: str = Depends(get_current_user)):
@@ -214,10 +234,10 @@ async def change_task(task_id: str, task: Task, current_user: str = Depends(get_
         old_task['members'] = task.members
         await task_collection.replace_one({'id': task_id}, old_task)
         post_collection =db['posts']
-        await post_collection.update_many({'project': old_task_name}, {'$set': {'project': new_task_name}})
-        return {'message': 'Project updated'}
+        await post_collection.update_many({'task': old_task_name}, {'$set': {'task': new_task_name}})
+        return {'message': 'Task updated'}
     else:
-        return {'message': 'Project not found'}
+        return {'message': 'Task not found'}
 
 @router.patch("/add_comment_totask/{task_id}")
 async def add_comment(task_id: str, comment: Comment, current_user: str = Depends(get_current_user)):
