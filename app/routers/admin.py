@@ -81,8 +81,8 @@ async def create_task(task: Task, current_user: str = Depends(get_current_user))
 
     project_found = False
 
-    for name in compared_lst:
-        if name['name'] == task_dict['project']:
+    for id in compared_lst:
+        if id['id'] == task_dict['project']:
             project_found = True
             break
 
