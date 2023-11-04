@@ -36,8 +36,8 @@ async def compare(data, type):
     lst = await data_collection.find({"id": data},{'_id': 0, 'id': 1, 'name': 1, 'members': 1}).to_list(length=None)
     return lst
   
-async def check_complete_task(project_name):
+async def check_complete_task(project_id):
     db = get_db()
     task_collection = db['tasks']
-    tasks = await task_collection.find({'project': project_name}, {'_id': 0, 'status': 1}).to_list(length=None)
+    tasks = await task_collection.find({'project': project_id}, {'_id': 0, 'status': 1}).to_list(length=None)
     return tasks

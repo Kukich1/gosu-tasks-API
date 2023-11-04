@@ -253,7 +253,7 @@ async def complete_project(project_id: str, current_user: str = Depends(get_curr
     db = get_db()
     project_collection = db['projects']
     project = await project_collection.find_one({'id': project_id})
-    checked_tasks = await check_complete_task(project['name'])
+    checked_tasks = await check_complete_task(project['id'])
     print(checked_tasks)
     
     da_ili_net = True
