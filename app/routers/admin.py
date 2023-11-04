@@ -275,22 +275,37 @@ async def complete_project(project_id: str, current_user: str = Depends(get_curr
     else:
         raise HTTPException(status_code=404, detail="You have 'status': 'current'")
 
-@router.delete("/delet_project/{project_id}")
+@router.delete("/delete_project/{project_id}")
 async def delete_project(project_id: str, current_user: str = Depends(get_current_user)):
     db = get_db()
     project_collection = db['projects']
     task_collection = db['tasks']
     post_collection = db['posts']
-    project = await project_collection.find_one({'id': project_id}, {'_id': 0})
-    project_name = project['name']
-    tasks_lst = await task_collection.find({'project': project_name}, {'_id': 0, 'name': 1}).to_list(length=None)
+    project = await project_collection.find_one({'id': project_id}, {'_id': 0, 'id': 1})
+    project_id = project['id']
+    tasks_lst = await task_collection.find({'project': project_id}, {'_id': 0, 'id': 1}).to_list(length=None)
     
     for task in tasks_lst:
-        name = task['name']
-        await post_collection.delete_one({'task': name})
+        id = task['id']
+        await post_collection.delete_many({'task': id})
 
-    result_task = await task_collection.delete_many({'project': project_name})
+    result_task = await task_collection.delete_many({'project': project_id})
     if result_task:
         result = await project_collection.delete_one({'id': project_id})
         if result:
             return {"message": "Project and his tasks & posts have been deleted"}   
+        
+@router.delete("/delete_task/{task_id}")
+async def delete_task(task_id:str, current_user: str = Depends(get_current_user)):
+    db = get_db()
+    task_collection = db['tasks']
+    post_collection = db['posts']
+    posts_lst = await post_collection.find({'task': task_id}, {'_id': 0, 'id': 1}).to_list(length=None)
+
+    for post in posts_lst:
+        id = post['id']
+        await post_collection.delete_one({'task': id})
+
+    result = await task_collection.delete_one({'project': task_id})
+    if result:
+        return {"message": "Task and his posts have been deleted"} 
