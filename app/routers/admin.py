@@ -296,7 +296,7 @@ async def delete_project(project_id: str, current_user: str = Depends(get_curren
             return {"message": "Project and his tasks & posts have been deleted"}   
         
 @router.delete("/delete_task/{task_id}")
-async def delete_task(task_id:str, current_user: str = Depends(get_current_user)):
+async def delete_task(task_id: str, current_user: str = Depends(get_current_user)):
     db = get_db()
     task_collection = db['tasks']
     post_collection = db['posts']
@@ -306,6 +306,6 @@ async def delete_task(task_id:str, current_user: str = Depends(get_current_user)
         id = post['id']
         await post_collection.delete_one({'task': id})
 
-    result = await task_collection.delete_one({'project': task_id})
+    result = await task_collection.delete_one({'id': task_id})
     if result:
         return {"message": "Task and his posts have been deleted"} 
