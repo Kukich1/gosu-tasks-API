@@ -44,7 +44,19 @@ async def show_tasks(project_id: str):
     if da_ili_net:
         db = get_db()
         task_collection = db['tasks']
-        tasks = await task_collection.find({'project': project_id},{'_id': 0, 'id': 1, 'name': 1, 'description': 1, 'members': 1, 'project': 1, 'deadline': 1, 'created_at': 1, 'commets': 1, 'type': 1, 'status': 1,'time_completed': 1,'archive_deadline': 1}).to_list(length=None)
+        tasks = await task_collection.find({'status': 'current'},{'_id': 0, 'id': 1, 'name': 1, 'description': 1, 'members': 1, 'project': 1, 'deadline': 1, 'created_at': 1, 'commets': 1, 'type': 1, 'status': 1,'time_completed': 1,'archive_deadline': 1}).to_list(length=None)
+        for task in tasks:
+            task_id = task['id']
+            task_id = urllib.parse.unquote(task_id)
+            post_collection = db['post']
+            posts = await post_collection.find({'task': task_id},{'_id': 0,'id': 1}).to_list(length=None)
+            post_count = len(posts)
+            post_completed = await post_collection.find({'task': task_id, 'status': 'completed'},{'_id': 0,'id': 1}).to_list(length=None)
+            post_completed_count = len(post_completed)
+            print(type(task))
+            task["post_count"] = post_count
+            print(type(task))
+            task["post_completed_count"] = post_completed_count
         return tasks
     else: 
         raise HTTPException(status_code=404, detail="Project not found")
