@@ -44,7 +44,7 @@ async def show_tasks(project_id: str):
     if da_ili_net:
         db = get_db()
         task_collection = db['tasks']
-        tasks = await task_collection.find({'project': project_id},{'_id': 0, 'id': 1, 'name': 1, 'description': 1, 'members': 1, 'project': 1, 'deadline': 1, 'created_at': 1, 'commets': 1, 'type': 1, 'status': 1,'time_completed': 1,'archive_deadline': 1}).to_list(length=None)
+        tasks = await task_collection.find({'project': project_id},{'_id': 0, 'id': 1, 'name': 1, 'description': 1, 'members': 1, 'project': 1, 'deadline': 1, 'created_at': 1, 'commets': 1, 'type': 1, 'status': 1,'time_completed': 1,'archive_deadline': 1, 'comments': 1}).to_list(length=None)
         for task in tasks:
             task_id = task['id']
             task_id = urllib.parse.unquote(task_id)

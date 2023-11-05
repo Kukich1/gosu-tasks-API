@@ -56,11 +56,13 @@ class Post(BaseModel):
     type: str  = None
     status: str = None
 
+class Comment(BaseModel):
+    date: int = None
+    username: str = None
+    comment: str
+
 class Updated_post(BaseModel):
     post_text: str
-
-class Comment(BaseModel):
-    comment: str
 
 class TYPE(BaseModel):
     type: str

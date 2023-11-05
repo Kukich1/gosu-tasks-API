@@ -243,8 +243,18 @@ async def change_task(task_id: str, task: Task, current_user: str = Depends(get_
 async def add_comment(task_id: str, comment: Comment, current_user: str = Depends(get_current_user)):
     db = get_db()
     task_collection = db['tasks']
-    combined_comment = f'{current_user}:{comment.comment}'
-    result = await task_collection.update_one({'id': task_id}, {'$push': {'comments': combined_comment}})
+    timestamp = datetime.now().timestamp()
+    timestamp_without_ms = round(timestamp)
+    current_time = timestamp_without_ms
+    
+    comment_object = {
+        "date": current_time,
+        "username": current_user,
+        "comment": comment.comment
+    }
+    
+    result = await task_collection.update_one({'id': task_id}, {'$push': {'comments': comment_object}})
+    
     if result:
         return {"message": "comment added"}
     

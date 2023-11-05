@@ -31,11 +31,10 @@ async def get_current_user(token: str = Depends(http_bearer)):
             raise HTTPException(status_code=401, detail="Could not validate credentials")
         
         db = get_db()
-        user = await db['users'].find_one({"name": name, "role": 0})
+        user = await db['users'].find_one({"name": name, "role": 1})
         if user is None:
-            user = await db['users'].find_one({"name": name, "role": 1})
+            user = await db['users'].find_one({"name": name, "role": 0})
         username = user.get("username")
-        print(username)
         return username
     except JWTError:
         raise HTTPException(status_code=401, detail="Could not validate credentials")
