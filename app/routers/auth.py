@@ -40,4 +40,4 @@ async def login_for_access_token(user_data: UserLogin):
     )
     refresh_token_expires = timedelta(days=7)
     refresh_token = create_refresh_token(user['name'],user['role'], expires_delta = refresh_token_expires)
-    return {"access_token": access_token, "refresh_token": refresh_token, "role": user['role'], "name": user['name']}
+    return {"access_token": access_token, "refresh_token": refresh_token, "role": user['role'], "name": user['name'], "username": user['username']}
