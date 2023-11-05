@@ -1,9 +1,11 @@
+from datetime import datetime
 import urllib.parse
 
 from fastapi import APIRouter, Query, Depends, HTTPException
 from app.utils.database import get_db, compare
-
 from app.utils.jwt_handler import get_current_user
+
+from app.models.models import Comment
 
 router = APIRouter(
     prefix="/company",
@@ -93,3 +95,23 @@ async def show_completed_projects(start: int = Query(default=0, ge=0), end: int 
     except Exception as error: 
         return "something wrong"
     
+
+
+@router.patch("/add_comment_totask/{task_id}")
+async def add_comment(task_id: str, comment: Comment, current_user: str = Depends(get_current_user)):
+    db = get_db()
+    task_collection = db['tasks']
+    timestamp = datetime.now().timestamp()
+    timestamp_without_ms = round(timestamp)
+    current_time = timestamp_without_ms
+    
+    comment_object = {
+        "date": current_time,
+        "username": current_user,
+        "comment": comment.comment
+    }
+    
+    result = await task_collection.update_one({'id': task_id}, {'$push': {'comments': comment_object}})
+    
+    if result:
+        return {"message": "comment added"}

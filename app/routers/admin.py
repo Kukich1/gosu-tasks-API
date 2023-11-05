@@ -10,7 +10,7 @@ from openpyxl.utils import get_column_letter
 
 from app.utils.database import get_db, check_complete_task
 from app.utils.jwt_handler import get_current_user
-from app.models.models import Comment, Project, Task
+from app.models.models import Project, Task
 from app.utils.database import compare
 import httpx
 
@@ -239,24 +239,7 @@ async def change_task(task_id: str, task: Task, current_user: str = Depends(get_
     else:
         return {'message': 'Task not found'}
 
-@router.patch("/add_comment_totask/{task_id}")
-async def add_comment(task_id: str, comment: Comment, current_user: str = Depends(get_current_user)):
-    db = get_db()
-    task_collection = db['tasks']
-    timestamp = datetime.now().timestamp()
-    timestamp_without_ms = round(timestamp)
-    current_time = timestamp_without_ms
-    
-    comment_object = {
-        "date": current_time,
-        "username": current_user,
-        "comment": comment.comment
-    }
-    
-    result = await task_collection.update_one({'id': task_id}, {'$push': {'comments': comment_object}})
-    
-    if result:
-        return {"message": "comment added"}
+
     
 @router.patch("/complete_project/{project_id}")
 async def complete_project(project_id: str, current_user: str = Depends(get_current_user)):
