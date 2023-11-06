@@ -229,7 +229,7 @@ async def change_task(task_id: str, task: Task, current_user: str = Depends(get_
         old_task['description'] = task.description
         old_task['members'] = task.members
         if old_project_name['name'] != task.project:
-            old_task['project'] = new_project_id
+            old_task['project'] = new_project_id['id']
         await task_collection.replace_one({'id': task_id}, old_task)
         return {'message': 'Task updated'}
     else:
