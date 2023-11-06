@@ -199,8 +199,6 @@ async def change_project(project_id: str, project: Project, current_user: str = 
     project_collection = db['projects']
     old_project = await project_collection.find_one({'id': project_id})
     if old_project:
-        old_project_name = old_project['name']
-        new_project_name = project.name
         if old_project['deadline'] != project.deadline:
             if 'archive_deadline' not in old_project:
                 old_project['archive_deadline'] = []
@@ -210,9 +208,6 @@ async def change_project(project_id: str, project: Project, current_user: str = 
         old_project['description'] = project.description
         old_project['members'] = project.members
         await project_collection.replace_one({'id': project_id}, old_project)
-        task_collection = db['tasks']
-        await task_collection.update_many({'project': old_project_name}, {'$set': {'project': new_project_name}})
-        return {'message': 'Project updated'}
     else:
         return {'message': 'Project not found'}
     
@@ -220,10 +215,11 @@ async def change_project(project_id: str, project: Project, current_user: str = 
 async def change_task(task_id: str, task: Task, current_user: str = Depends(get_current_user)):
     db = get_db()
     task_collection = db['tasks']
+    project_collection = db['projects']
     old_task = await task_collection.find_one({'id': task_id})
+    old_project_name = await project_collection.find_one({'id': old_task['project']}, {'_id': 0, 'name': 1})
+    new_project_id = await project_collection.find_one({'name': task.project}, {'_id':0, 'id': 1})
     if old_task:
-        old_task_name = old_task['name']
-        new_task_name = task.name
         if old_task['deadline'] != task.deadline:
             if 'archive_deadline' not in old_task:
                 old_task['archive_deadline'] = []
@@ -232,9 +228,9 @@ async def change_task(task_id: str, task: Task, current_user: str = Depends(get_
         old_task['name'] = task.name
         old_task['description'] = task.description
         old_task['members'] = task.members
+        if old_project_name['name'] != task.project:
+            old_task['project'] = new_project_id
         await task_collection.replace_one({'id': task_id}, old_task)
-        post_collection =db['posts']
-        await post_collection.update_many({'task': old_task_name}, {'$set': {'task': new_task_name}})
         return {'message': 'Task updated'}
     else:
         return {'message': 'Task not found'}
