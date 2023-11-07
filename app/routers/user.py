@@ -37,8 +37,8 @@ async def create_new_post(post: Post, current_user: str = Depends(get_current_us
     db = get_db()
     post_collection = db['posts']
     task_collection = db['tasks']
-    task_id = await task_collection.find_one({'name': post.task},{'_id': 0,'id': 1})
-    post.task = task_id['id']
+    task_name = await task_collection.find_one({'id': post.task},{'_id': 0,'name': 1})
+  
     post_dict = post.dict()
     post_dict['id'] = str(uuid4())
     post_dict['type'] = "post"
