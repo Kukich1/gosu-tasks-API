@@ -26,11 +26,11 @@ async def get_admin_panel(current_user: str = Depends(get_current_user)):
     user_list = await users_collection.find({'role': 0}, {'_id': 0, 'username': 1}).to_list(length=None)
     return user_list
 
-@router.get("/show_users_task&posts_collection/{username}")
+@router.get("/show_users_task&posts/{username}")
 async def show_collection(username: str, start: float = Query(default=0, ge=0), end: float = Query(default=10, le=2000000000), current_user: str = Depends(get_current_user)):
     db = get_db()
     posts_collection = db['posts']
-    user_posts = await posts_collection.find({"created_user": username, "created_at": {"$gte": start, "$lte": end}}, {'_id': 0, 'post_tittle': 1, 'post_text': 1, 'type': 1, 'comments': 1, 'id': 1, 'created_at': 1}).to_list(length=None)
+    user_posts = await posts_collection.find({"member": username, "created_at": {"$gte": start, "$lte": end}}, {'_id': 0,'id': 1,'name': 1, 'description': 1, 'member': 1,'created_at': 1, 'status': 1, 'time_completed': 1, 'deadline': 1, 'task': 1}).to_list(length=None)
     return user_posts   
 
 @router.post("/create_project")

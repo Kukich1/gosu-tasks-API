@@ -44,12 +44,9 @@ class Task(BaseModel):
 class Post(BaseModel):
     id: str = None
     сlient: str = 'Gosu'
-    applicant: str = ''
-    executor: str = ''
-    type_of_work: str = 'development'
     name: str
     description: str
-    member: str 
+    member: str = None
     task: str
     created_at: int = None
     time_completed: int = None

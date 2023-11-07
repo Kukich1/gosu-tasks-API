@@ -36,13 +36,14 @@ async def show_completed_taskpost(start: int = Query(default=0, ge=0), end: int 
 async def create_new_post(post: Post, current_user: str = Depends(get_current_user)):
     db = get_db()
     post_collection = db['posts']
+    task_collection = db['tasks']
+    task_id = await task_collection.find_one({'name': post.task},{'_id': 0,'id': 1})
+    post.task = task_id['id']
     post_dict = post.dict()
     post_dict['id'] = str(uuid4())
     post_dict['type'] = "post"
     post_dict['status'] = 'current'
     post_dict['member'] = current_user
-    post_dict['applicant'] = current_user
-    post_dict['executor'] = current_user
     timestamp = datetime.now().timestamp()
     timestamp_without_ms = round(timestamp)
     post_dict['created_at'] = timestamp_without_ms
@@ -50,8 +51,8 @@ async def create_new_post(post: Post, current_user: str = Depends(get_current_us
 
     project_found = False
 
-    for name in compared_lst:
-        if name['name'] == post_dict['task'] and current_user in name['members']:
+    for id in compared_lst:
+        if id['id'] == post_dict['task'] and current_user in id['members']:
             project_found = True
             break
 
