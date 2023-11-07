@@ -46,6 +46,7 @@ class Post(BaseModel):
     сlient: str = 'Gosu'
     name: str
     description: str
+    deadline: int
     member: str = None
     task: str
     created_at: int = None

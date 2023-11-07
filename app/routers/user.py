@@ -51,10 +51,12 @@ async def create_new_post(post: Post, current_user: str = Depends(get_current_us
 
     project_found = False
 
+    print(compared_lst)
     for id in compared_lst:
-        if id['id'] == post_dict['task'] and current_user in id['members']:
-            project_found = True
-            break
+        if id['id'] == post_dict['task']:
+            if current_user in id['members']:
+                project_found = True
+                break
 
     if project_found:
         new_task = await post_collection.insert_one(post_dict)
