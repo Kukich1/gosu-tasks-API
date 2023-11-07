@@ -110,8 +110,11 @@ async def add_comment(task_id: str, comment: Comment, current_user: str = Depend
         "username": current_user,
         "comment": comment.comment
     }
-    
+
     result = await task_collection.update_one({'id': task_id}, {'$push': {'comments': comment_object}})
+
+    result = await task_collection.find_one({'id':task_id},{'_id':0,'comments':1})
     
     if result:
-        return {"message": "comment added"}
+        return result
+    
