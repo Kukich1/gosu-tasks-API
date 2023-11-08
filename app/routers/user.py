@@ -1,5 +1,8 @@
 from datetime import datetime
 from uuid import uuid4
+from bson import ObjectId
+
+import urllib.parse
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
@@ -17,8 +20,25 @@ async def get_user_posts(current_user: str = Depends(get_current_user)):
     db = get_db()
     posts_collection = db['posts']
     task_collection = db['tasks']
+    project_collection = db['projects']
     user_posts = await posts_collection.find({"member": current_user, 'status': 'current'}, {'_id': 0, 'id': 1, 'name': 1, 'description': 1, 'task': 1, 'deadline': 1,'created_at': 1, 'type': 1, 'status': 1}).to_list(length=None)
     user_tasks = await task_collection.find({"members": current_user, 'status': 'current'}, {'_id': 0, 'id': 1, 'name': 1, 'description': 1, 'project': 1, 'deadline': 1, 'created_at': 1, 'comments': 1, 'type': 1, 'status': 1}).to_list(length=None)
+    
+    for user_task in user_tasks:
+        project_id = user_task['project']
+        project_id = urllib.parse.unquote(project_id)
+        project_name = await project_collection.find_one({'id': project_id}, {'name': 1})
+        user_task["project_name"] = project_name['name'] if project_name else "Неизвестный проект"
+        user_task["project"] = str(project_id)  # Преобразование ObjectId в строку
+    
+    for user_post in user_posts:
+        task_id = user_post['task']
+        task_id = urllib.parse.unquote(task_id)
+        task_name = await task_collection.find_one({'id': task_id}, {'name': 1})
+        user_post["task_name"] = task_name['name'] if task_name else "Неизвестная задача"
+        user_post["task"] = str(task_id)  # Преобразование ObjectId в строку
+    
+    completed_lst = user_posts + user_tasks
     completed_lst = user_posts + user_tasks
     return completed_lst
 
@@ -27,8 +47,25 @@ async def show_completed_taskpost(start: int = Query(default=0, ge=0), end: int 
     db = get_db()
     posts_collection = db['posts']
     task_collection = db['tasks']
-    user_posts = await posts_collection.find({"created_at":{"$gte": start, "$lte": end}, "member": current_user, 'status': 'completed'}, {'_id': 0, 'id': 1, 'name': 1, 'description': 1, 'task': 1, 'created_at': 1, 'type': 1, 'status': 1}).to_list(length=None)
-    user_tasks = await task_collection.find({"created_at":{"$gte": start, "$lte": end}, "members": current_user, 'status': 'completed'}, {'_id': 0, 'id': 1, 'name': 1, 'description': 1, 'project': 1, 'deadline': 1, 'created_at': 1, 'comments': 1, 'type': 1, 'status': 1, 'members': 1}).to_list(length=None)
+    project_collection = db['projects']
+    
+    user_posts = await posts_collection.find({"created_at":{"$gte": start, "$lte": end}, "member": current_user, 'status': 'completed'}, {'_id': 0, 'id': 1, 'name': 1, 'description': 1, 'task': 1,'deadline': 1, 'created_at': 1, 'type': 1, 'status': 1, 'time_completed': 1}).to_list(length=None)
+    user_tasks = await task_collection.find({"created_at":{"$gte": start, "$lte": end}, "members": current_user, 'status': 'completed'}, {'_id': 0, 'id': 1, 'name': 1, 'description': 1, 'project': 1, 'deadline': 1, 'created_at': 1, 'comments': 1, 'type': 1, 'status': 1, 'members': 1,'time_completed': 1}).to_list(length=None)
+    
+    for user_task in user_tasks:
+        project_id = user_task['project']
+        project_id = urllib.parse.unquote(project_id)
+        project_name = await project_collection.find_one({'id': project_id}, {'name': 1})
+        user_task["project_name"] = project_name['name'] if project_name else "Неизвестный проект"
+        user_task["project"] = str(project_id)  # Преобразование ObjectId в строку
+    
+    for user_post in user_posts:
+        task_id = user_post['task']
+        task_id = urllib.parse.unquote(task_id)
+        task_name = await task_collection.find_one({'id': task_id}, {'name': 1})
+        user_post["task_name"] = task_name['name'] if task_name else "Неизвестная задача"
+        user_post["task"] = str(task_id)  # Преобразование ObjectId в строку
+    
     completed_lst = user_posts + user_tasks
     return completed_lst
 
