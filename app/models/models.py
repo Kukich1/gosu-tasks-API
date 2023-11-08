@@ -44,6 +44,7 @@ class Task(BaseModel):
 class Post(BaseModel):
     id: str = None
     сlient: str = 'Gosu'
+    action: str = 'to do'
     name: str
     description: str
     deadline: int
@@ -61,6 +62,9 @@ class Comment(BaseModel):
 
 class Updated_post(BaseModel):
     post_text: str
+
+class PostActionRequest(BaseModel):
+    action: str
 
 class TYPE(BaseModel):
     type: str
