@@ -106,17 +106,33 @@ async def create_new_post(post: Post, current_user: str = Depends(get_current_us
 async def change_post(post_id: str, post: Post, current_user: str = Depends(get_current_user)):
     db = get_db()
     post_collection = db['posts']
-    updated_dict = post.dict()
-    updated_dict['id'] = str(uuid4())
-    updated_dict['type'] = "post"
-    updated_dict['status'] = 'current'
-    updated_dict['member'] = current_user
-    timestamp = datetime.now().timestamp()
-    timestamp_without_ms = round(timestamp)
-    updated_dict['created_at'] = timestamp_without_ms
-    result = await post_collection.update_one({'id':  post_id}, {'$set': updated_dict})
-    if result:
-        return {"message": "Post changed"}
+    old_post = await post_collection.find_one({'id': post_id})
+    if old_post:
+        if old_post['deadline'] != post.deadline:
+            if 'archive_deadline' not in old_post:
+                old_post['archive_deadline'] = []
+            old_post['archive_deadline'].append(old_post['deadline'])
+            old_post['deadline'] = post.deadline
+            old_post['name'] = post.name
+            old_post['description'] = post.description
+            old_post['member'] = post.member
+            compared_lst = await compare(post.task, "tasks")
+
+            post_found = False
+
+            print(compared_lst)
+            for id in compared_lst:
+                if id['id'] == post.task:
+                    if current_user in id['members']:
+                        project_found = True
+                        break
+
+            if project_found:
+                old_post['task'] = post.task
+                await post_collection.replace_one({'id': post_id}, old_post)
+                return {"message": "New post is created"}
+            else:
+                raise HTTPException(status_code=404, detail="Task not found")
 
 @router.patch("/action/{post_id}")
 async def action_post(post_id: str, post: PostActionRequest, current_user: str = Depends(get_current_user)):
