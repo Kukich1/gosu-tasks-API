@@ -123,10 +123,10 @@ async def change_post(post_id: str, post: Post, current_user: str = Depends(get_
             for id in compared_lst:
                 if id['id'] == post.task:
                     if current_user in id['members']:
-                        project_found = True
+                        post_found = True
                         break
 
-            if project_found:
+            if post_found:
                 old_post['task'] = post.task
                 await post_collection.replace_one({'id': post_id}, old_post)
                 return {"message": "New post is created"}
