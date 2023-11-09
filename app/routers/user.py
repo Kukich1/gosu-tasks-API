@@ -109,7 +109,7 @@ async def change_post(post_id: str, post: Post, current_user: str = Depends(get_
     old_post = await post_collection.find_one({'id': post_id})
     if old_post:
         if old_post['deadline'] != post.deadline:
-            if old_post['archive_deadline'] not in old_post:
+            if 'archive_deadline' not in old_post:
                 old_post['archive_deadline'] = []
             old_post['archive_deadline'].append(old_post['deadline'])
             old_post['deadline'] = post.deadline
