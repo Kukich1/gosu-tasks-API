@@ -41,3 +41,9 @@ async def check_complete_task(project_id):
     task_collection = db['tasks']
     tasks = await task_collection.find({'project': project_id}, {'_id': 0, 'status': 1}).to_list(length=None)
     return tasks
+
+async def check_complete_post(task_id):
+    db = get_db()
+    post_collection = db['posts']
+    posts = await post_collection.find({'task': task_id}, {'_id': 0, 'status': 1}).to_list(length=None)
+    return posts

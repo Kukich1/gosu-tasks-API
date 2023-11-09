@@ -8,7 +8,7 @@ import io
 from openpyxl.styles import PatternFill
 from openpyxl.utils import get_column_letter
 
-from app.utils.database import get_db, check_complete_task
+from app.utils.database import get_db, check_complete_task, check_complete_post
 from app.utils.jwt_handler import get_current_user
 from app.models.models import Project, Task
 from app.utils.database import compare
@@ -239,7 +239,6 @@ async def change_task(task_id: str, task: Task, current_user: str = Depends(get_
         return {'message': 'Task not found'}
 
 
-    
 @router.patch("/complete_project/{project_id}")
 async def complete_project(project_id: str, current_user: str = Depends(get_current_user)):
     db = get_db()
@@ -266,6 +265,34 @@ async def complete_project(project_id: str, current_user: str = Depends(get_curr
             raise HTTPException(status_code=404, detail="Item not found")
     else:
         raise HTTPException(status_code=404, detail="You have 'status': 'current'")
+    
+
+@router.patch("/complete_task/{task_id}")
+async def complete_task(task_id: str, current_user: str = Depends(get_current_user)):
+    db = get_db()
+    task_collection = db['tasks']
+    task = await task_collection.find_one({'id': task_id})
+    checked_posts = await check_complete_post(task['id'])
+
+    da_ili_net = True
+    if len(checked_posts) == 0:
+        da_ili_net = False
+    for name in checked_posts:
+        if name['status'] == 'current':
+            da_ili_net = False
+            break
+    if da_ili_net:
+        result = await task_collection.update_one({'id': task_id}, {'$set': {'status': 'completed'}})
+        if result.matched_count == 1:
+            timestamp = datetime.now().timestamp()
+            timestamp_without_ms = round(timestamp)
+            await task_collection.update_one({'id': task_id},{'$set':{'time_completed': timestamp_without_ms}})
+        else:
+            raise HTTPException(status_code=404, detail="Item not found")
+    else:
+        raise HTTPException(status_code=404, detail="You have 'status': 'current'")
+
+
 
 @router.delete("/delete_project/{project_id}")
 async def delete_project(project_id: str, current_user: str = Depends(get_current_user)):
@@ -287,6 +314,7 @@ async def delete_project(project_id: str, current_user: str = Depends(get_curren
         if result:
             return {"message": "Project and his tasks & posts have been deleted"}   
         
+
 @router.delete("/delete_task/{task_id}")
 async def delete_task(task_id: str, current_user: str = Depends(get_current_user)):
     db = get_db()

@@ -151,22 +151,7 @@ async def complete_post(post_id: str, current_user: str = Depends(get_current_us
         updated_post['time_completed'] = timestamp_without_ms
         return updated_post
     else:
-        raise HTTPException(status_code=404, detail="Item not found")
-    
-@router.patch("/complete_task/{task_id}")
-async def complete_task(task_id: str, current_user: str = Depends(get_current_user)):
-    db = get_db()
-    task_collection = db['tasks']
-    result = await task_collection.update_one({'id': task_id}, {'$set': {'status': 'completed'}})
-    if result.matched_count == 1:
-        updated_task = await task_collection.find_one({'id': task_id},{'_id': 0})
-        timestamp = datetime.now().timestamp()
-        timestamp_without_ms = round(timestamp)
-        updated_task['time_completed'] = timestamp_without_ms
-        return updated_task
-    else:
-        raise HTTPException(status_code=404, detail="Item not found")
-    
+        raise HTTPException(status_code=404, detail="Item not found")    
 
 @router.delete("delete_post/{post_id}")
 async def delete_post(post_id: str, current_user: str = Depends(get_current_user)):
