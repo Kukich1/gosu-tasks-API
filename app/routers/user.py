@@ -115,7 +115,6 @@ async def change_post(post_id: str, post: Post, current_user: str = Depends(get_
             old_post['deadline'] = post.deadline
             old_post['name'] = post.name
             old_post['description'] = post.description
-            old_post['member'] = post.member
             compared_lst = await compare(post.task, "tasks")
 
             post_found = False

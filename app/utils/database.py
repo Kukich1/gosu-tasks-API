@@ -33,7 +33,7 @@ async def authenticate_user(username: str, password: str):
 async def compare(data, type):
     db = get_db()
     data_collection = db[type]
-    lst = await data_collection.find({"id": data},{'_id': 0, 'id': 1, 'name': 1, 'members': 1, 'member': 1}).to_list(length=None)
+    lst = await data_collection.find({"id": data},{'_id': 0, 'id': 1, 'name': 1, 'members': 1}).to_list(length=None)
     return lst
   
 async def check_complete_task(project_id):
