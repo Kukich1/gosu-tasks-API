@@ -42,6 +42,7 @@ async def get_user_posts(current_user: str = Depends(get_current_user)):
     completed_lst = user_posts + user_tasks
     return completed_lst
 
+
 @router.get("/get_completed_tasks&posts/")
 async def show_completed_taskpost(start: int = Query(default=0, ge=0), end: int = Query(default=2000000000, le=2000000000), current_user: str = Depends(get_current_user)):
     db = get_db()
@@ -68,6 +69,7 @@ async def show_completed_taskpost(start: int = Query(default=0, ge=0), end: int 
     
     completed_lst = user_posts + user_tasks
     return completed_lst
+
 
 @router.post("/create_post/")
 async def create_new_post(post: Post, current_user: str = Depends(get_current_user)):
@@ -102,6 +104,7 @@ async def create_new_post(post: Post, current_user: str = Depends(get_current_us
     else:
         raise HTTPException(status_code=404, detail="Task not found")
     
+
 @router.put("/change_post/{post_id}")
 async def change_post(post_id: str, post: Post, current_user: str = Depends(get_current_user)):
     db = get_db()
@@ -133,11 +136,13 @@ async def change_post(post_id: str, post: Post, current_user: str = Depends(get_
             else:
                 raise HTTPException(status_code=404, detail="Task not found")
 
+
 @router.patch("/action/{post_id}")
 async def action_post(post_id: str, post: PostActionRequest, current_user: str = Depends(get_current_user)):
     db = get_db()
     post_collection = db['posts']
     await post_collection.update_one({'id': post_id}, {'$set': {'action': post.action}})
+
 
 @router.patch("/complete_post/{post_id}")
 async def complete_post(post_id: str, current_user: str = Depends(get_current_user)):
@@ -152,6 +157,7 @@ async def complete_post(post_id: str, current_user: str = Depends(get_current_us
         return updated_post
     else:
         raise HTTPException(status_code=404, detail="Item not found")    
+
 
 @router.delete("delete_post/{post_id}")
 async def delete_post(post_id: str, current_user: str = Depends(get_current_user)):
