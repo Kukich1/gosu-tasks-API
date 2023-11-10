@@ -21,8 +21,8 @@ async def get_user_posts(current_user: str = Depends(get_current_user)):
     posts_collection = db['posts']
     task_collection = db['tasks']
     project_collection = db['projects']
-    user_posts = await posts_collection.find({"member": current_user, 'status': 'current'}, {'_id': 0, 'id': 1, 'name': 1, 'description': 1, 'task': 1, 'deadline': 1,'created_at': 1, 'type': 1, 'status': 1, 'action': 1}).to_list(length=None)
-    user_tasks = await task_collection.find({"members": current_user, 'status': 'current'}, {'_id': 0, 'id': 1, 'name': 1, 'description': 1, 'project': 1, 'deadline': 1, 'created_at': 1, 'comments': 1, 'type': 1, 'status': 1}).to_list(length=None)
+    user_posts = await posts_collection.find({"member": current_user, 'status': 'current'}, {'_id': 0, 'id': 1, 'name': 1, 'description': 1, 'task': 1, 'deadline': 1,'created_at': 1, 'type': 1, 'status': 1, 'action': 1, 'member': 1}).to_list(length=None)
+    user_tasks = await task_collection.find({"members": current_user, 'status': 'current'}, {'_id': 0, 'id': 1, 'name': 1, 'description': 1, 'project': 1, 'deadline': 1, 'created_at': 1, 'comments': 1, 'type': 1, 'status': 1,'members': 1}).to_list(length=None)
     
     for user_task in user_tasks:
         project_id = user_task['project']
@@ -50,7 +50,7 @@ async def show_completed_taskpost(start: int = Query(default=0, ge=0), end: int 
     task_collection = db['tasks']
     project_collection = db['projects']
     
-    user_posts = await posts_collection.find({"created_at":{"$gte": start, "$lte": end}, "member": current_user, 'status': 'completed'}, {'_id': 0, 'id': 1, 'name': 1, 'description': 1, 'task': 1,'deadline': 1, 'created_at': 1, 'type': 1, 'status': 1, 'time_completed': 1, 'action': 1}).to_list(length=None)
+    user_posts = await posts_collection.find({"created_at":{"$gte": start, "$lte": end}, "member": current_user, 'status': 'completed'}, {'_id': 0, 'id': 1, 'name': 1, 'description': 1, 'task': 1,'deadline': 1, 'created_at': 1, 'type': 1, 'status': 1, 'time_completed': 1, 'action': 1, 'member': 1}).to_list(length=None)
     user_tasks = await task_collection.find({"created_at":{"$gte": start, "$lte": end}, "members": current_user, 'status': 'completed'}, {'_id': 0, 'id': 1, 'name': 1, 'description': 1, 'project': 1, 'deadline': 1, 'created_at': 1, 'comments': 1, 'type': 1, 'status': 1, 'members': 1,'time_completed': 1}).to_list(length=None)
     
     for user_task in user_tasks:
