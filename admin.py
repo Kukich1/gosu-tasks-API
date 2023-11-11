@@ -252,7 +252,7 @@ async def complete_project(project_id: str, current_user: str = Depends(get_curr
             da_ili_net = True
 
     if da_ili_net:
-        result = await project_collection.update_one({'id': project_id}, {'$set': {'status': 'complete'}})
+        result = await project_collection.update_one({'id': project_id}, {'$set': {'status': 'completed'}})
         if result.matched_count == 1:
             updated_task = await project_collection.find_one({'id': project_id},{'_id': 0})
             timestamp = datetime.now().timestamp()
