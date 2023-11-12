@@ -39,7 +39,6 @@ async def get_user_posts(current_user: str = Depends(get_current_user)):
         user_post["task"] = str(task_id)  # Преобразование ObjectId в строку
     
     completed_lst = user_posts + user_tasks
-    completed_lst = user_posts + user_tasks
     return completed_lst
 
 

@@ -1,6 +1,7 @@
 from datetime import datetime
 from uuid import uuid4
 
+import urllib.parse
 from fastapi import APIRouter, Depends, Response, Query, HTTPException
 
 import openpyxl
@@ -26,12 +27,31 @@ async def get_admin_panel(current_user: str = Depends(get_current_user)):
     user_list = await users_collection.find({'role': 0}, {'_id': 0, 'username': 1}).to_list(length=None)
     return user_list
 
-@router.get("/show_users_task&posts/{username}")
-async def show_collection(username: str, start: float = Query(default=0, ge=0), end: float = Query(default=10, le=2000000000), current_user: str = Depends(get_current_user)):
+@router.get("/show_user_tasks&posts/{username}")
+async def show_collection(username: str, current_user: str = Depends(get_current_user)):
     db = get_db()
+    task_collection = db['tasks']
     posts_collection = db['posts']
-    user_posts = await posts_collection.find({"member": username, "created_at": {"$gte": start, "$lte": end}}, {'_id': 0,'id': 1,'name': 1, 'description': 1, 'member': 1,'created_at': 1, 'status': 1, 'time_completed': 1, 'deadline': 1, 'task': 1}).to_list(length=None)
-    return user_posts   
+    project_collection = db['projects']
+    user_tasks = await task_collection.find({"members": username, 'status': 'current'}, {'_id': 0,'id': 1,'name': 1, 'description': 1, 'project': 1,'created_at': 1, 'status': 1, 'time_completed': 1, 'deadline': 1, 'type': 1,'action': 1,'members': 1}).to_list(length=None)
+    user_posts = await posts_collection.find({"member": username, 'status': 'current'}, {'_id': 0,'id': 1,'name': 1, 'description': 1, 'member': 1,'created_at': 1, 'status': 1, 'time_completed': 1, 'deadline': 1, 'task': 1,'type':1,'action':1,'client':1}).to_list(length=None)
+
+    for user_task in user_tasks:
+        project_id = user_task['project']
+        project_id = urllib.parse.unquote(project_id)
+        project_name = await project_collection.find_one({'id': project_id}, {'name': 1})
+        user_task["project_name"] = project_name['name'] if project_name else "Неизвестный проект"
+        user_task["project"] = str(project_id)  # Преобразование ObjectId в строку
+    
+    for user_post in user_posts:
+        task_id = user_post['task']
+        task_id = urllib.parse.unquote(task_id)
+        task_name = await task_collection.find_one({'id': task_id}, {'name': 1})
+        user_post["task_name"] = task_name['name'] if task_name else "Неизвестная задача"
+        user_post["task"] = str(task_id)  # Преобразование ObjectId в строку
+    
+    completed_lst = user_posts + user_tasks
+    return completed_lst
 
 @router.post("/create_project")
 async def create_project(project: Project, current_user: str = Depends(get_current_user)):
