@@ -33,8 +33,8 @@ async def show_collection(username: str, current_user: str = Depends(get_current
     task_collection = db['tasks']
     posts_collection = db['posts']
     project_collection = db['projects']
-    user_tasks = await task_collection.find({"members": username, 'status': 'current'}, {'_id': 0,'id': 1,'name': 1, 'description': 1, 'project': 1,'created_at': 1, 'status': 1, 'time_completed': 1, 'deadline': 1, 'type': 1,'action': 1,'members': 1}).to_list(length=None)
-    user_posts = await posts_collection.find({"member": username, 'status': 'current'}, {'_id': 0,'id': 1,'name': 1, 'description': 1, 'member': 1,'created_at': 1, 'status': 1, 'time_completed': 1, 'deadline': 1, 'task': 1,'type':1,'action':1,'client':1}).to_list(length=None)
+    user_tasks = await task_collection.find({"members": username, 'status': 'current'}, {'_id': 0,'id': 1,'name': 1, 'description': 1, 'project': 1,'deadline':1,'comments':1,'created_at': 1, 'status': 1, 'time_completed': 1, 'type': 1,'members': 1,'status':1}).to_list(length=None)
+    user_posts = await posts_collection.find({"member": username, 'status': 'current'}, {'_id': 0,'id': 1,'name': 1, 'description': 1, 'member': 1,'created_at': 1, 'status': 1, 'time_completed': 1, 'deadline': 1, 'task': 1,'type':1,'action':1,'client':1,'status':1}).to_list(length=None)
 
     for user_task in user_tasks:
         project_id = user_task['project']
