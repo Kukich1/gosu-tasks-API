@@ -189,7 +189,7 @@ async def export_all_posts(start: float = Query(default=0, ge=0), end: float = Q
 
         return Response(content=output.getvalue(), media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", headers={"Content-Disposition": "attachment; filename=all_posts.xlsx"})
     except Exception as error: 
-        return "something wrong"
+        return f"Error: {str(error)}"
     
 @router.post("/exportexcel/{username}")
 async def export_user_posts(username: str, start: float = Query(default=0, ge=0), end: float = Query(default=2000000000, le=2000000000), current_user: str = Depends(get_current_user)):
@@ -263,7 +263,7 @@ async def export_user_posts(username: str, start: float = Query(default=0, ge=0)
 
         return Response(content=output.getvalue(), media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", headers={"Content-Disposition": "attachment; filename=all_posts.xlsx"})
     except Exception as error: 
-        return "something wrong"
+        return f"Error: {str(error)}"
 
 @router.put("/change_project/{project_id}")
 async def change_project(project_id: str, project: Project, current_user: str = Depends(get_current_user)):
