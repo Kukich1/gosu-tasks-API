@@ -1,7 +1,10 @@
 from datetime import datetime
 from uuid import uuid4
 
+from operator import itemgetter
+
 import urllib.parse
+
 from fastapi import APIRouter, Depends, Response, Query, HTTPException
 
 import openpyxl
@@ -121,29 +124,38 @@ async def export_all_posts(start: float = Query(default=0, ge=0), end: float = Q
     try:
         db = get_db()
         posts_collection = db['posts']
-        posts = await posts_collection.find({"created_at":{"$gte": start, "$lte": end}}, {'_id': 0, 'created_user': 1, 'post_tittle': 1, 'post_text': 1, 'created_at': 1}).to_list(length=None)
+        task_collection = db['tasks']
+        project_collection = db['projects']
+        posts = await posts_collection.find({"created_at":{"$gte": start, "$lte": end}}, {'_id': 0, 'member': 1, 'name': 1, 'description': 1, 'created_at': 1, 'status':1, 'task':1}).to_list(length=None)
+        for data in posts:
+            project_id = await task_collection.find_one({'id': data['task']}, {'_id': 0, 'project': 1})
+            project_info = await project_collection.find_one({'id': project_id['project']}, {'_id': 0, 'name': 1})
+            data['project_name'] = project_info['name']
+        posts = sorted(posts, key=itemgetter('member'))
         book = openpyxl.Workbook()
         sheet = book.active
-
         sheet['A1'] = "СОТРУДНИК"
         sheet['B1'] = "ЗАГОЛОВОК"
         sheet['C1'] = "ИНФОРМАЦИЯ"
-        sheet['D1'] = "ДАТА СОЗДАНИЯ"
-
+        sheet['D1'] = "СТАТУС"
+        sheet['E1'] = "ПРОЕКТ"
+        sheet['F1'] = "ТРУДОЗАТРАТЫ"
+        sheet['G1'] = "ДАТА СОЗДАНИЯ"
         for cell in sheet[1]:
                 cell.fill = PatternFill(start_color="6495ED", end_color="6495ED", fill_type="solid")
-
         row = 2
         for data in posts:
             timestamp = data['created_at']
             data_post = datetime.fromtimestamp(timestamp)
             data_post_without_ms = data_post.replace(microsecond=0)
-            sheet[row][0].value = data['created_user']
-            sheet[row][1].value = data['post_tittle']
-            sheet[row][2].value = data['post_text']
-            sheet[row][3].value = data_post_without_ms
+            sheet[row][0].value = data['member']
+            sheet[row][1].value = data['name']
+            sheet[row][2].value = data['description']
+            sheet[row][3].value = 'В работе' if data['status'] == 'current' else 'Завершено'
+            sheet[row][4].value = data['project_name']
+            sheet[row][5].value = '0 часов'
+            sheet[row][6].value = data_post_without_ms
             row += 1
-
         for col in sheet.columns:
             max_length = 0
             for cell in col:
@@ -156,44 +168,51 @@ async def export_all_posts(start: float = Query(default=0, ge=0), end: float = Q
             if adjusted_width < 18:
                 adjusted_width = 18
             sheet.column_dimensions[get_column_letter(col[0].column)].width = adjusted_width
-
         output = io.BytesIO()
-
         book.save(output)
         output.seek(0)
-
         return Response(content=output.getvalue(), media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", headers={"Content-Disposition": "attachment; filename=all_posts.xlsx"})
     except Exception as error: 
         return "something wrong"
     
+
 @router.post("/exportexcel/{username}")
 async def export_user_posts(username: str, start: float = Query(default=0, ge=0), end: float = Query(default=2000000000, le=2000000000), current_user: str = Depends(get_current_user)):
     try:
         db = get_db()
         posts_collection = db['posts']
-        posts = await posts_collection.find({"created_user": username, "created_at": {"$gte": start, "$lte": end}}, {'_id': 0, 'created_user': 1, 'post_tittle': 1, 'post_text': 1, 'created_at': 1}).to_list(length=None)
+        task_collection = db['tasks']
+        project_collection = db['projects']
+        posts = await posts_collection.find({"member": username, "created_at": {"$gte": start, "$lte": end}}, {'_id': 0, 'member': 1, 'name': 1, 'description': 1, 'created_at': 1,'status':1,'task':1}).to_list(length=None)
+        for data in posts:
+            project_id = await task_collection.find_one({'id': data['task']}, {'_id': 0, 'project': 1})
+            project_info = await project_collection.find_one({'id': project_id['project']}, {'_id': 0, 'name': 1})
+            data['project_name'] = project_info['name']
+        posts = sorted(posts, key=itemgetter('project_name'))
         book = openpyxl.Workbook()
         sheet = book.active
-
         sheet['A1'] = "СОТРУДНИК"
         sheet['B1'] = "ЗАГОЛОВОК"
         sheet['C1'] = "ИНФОРМАЦИЯ"
-        sheet['D1'] = "ДАТА СОЗДАНИЯ"
-
+        sheet['D1'] = "СТАТУС"
+        sheet['E1'] = "ПРОЕКТ"
+        sheet['F1'] = "ТРУДОЗАТРАТЫ"
+        sheet['G1'] = "ДАТА СОЗДАНИЯ"
         for cell in sheet[1]:
             cell.fill = PatternFill(start_color="6495ED", end_color="6495ED", fill_type="solid")
-
         row = 2
         for data in posts:
             timestamp = data['created_at']
             data_post = datetime.fromtimestamp(timestamp)
             data_post_without_ms = data_post.replace(microsecond=0)
-            sheet[row][0].value = data['created_user']
-            sheet[row][1].value = data['post_tittle']
-            sheet[row][2].value = data['post_text']
-            sheet[row][3].value = data_post_without_ms
+            sheet[row][0].value = data['member']
+            sheet[row][1].value = data['name']
+            sheet[row][2].value = data['description']
+            sheet[row][3].value = 'В работе' if data['status'] == 'current' else 'Завершено'
+            sheet[row][4].value = data['project_name']
+            sheet[row][5].value = '0 часов'
+            sheet[row][6].value = data_post_without_ms
             row += 1
-
         for col in sheet.columns:
             max_length = 0
             for cell in col:
@@ -206,12 +225,9 @@ async def export_user_posts(username: str, start: float = Query(default=0, ge=0)
             if adjusted_width < 18:
                 adjusted_width = 18
             sheet.column_dimensions[get_column_letter(col[0].column)].width = adjusted_width
-
         output = io.BytesIO()
-
         book.save(output)
         output.seek(0)
-
         return Response(content=output.getvalue(), media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", headers={"Content-Disposition": f"attachment; filename={username}_posts.xlsx"})
     except Exception as error: 
         return "something wrong"
